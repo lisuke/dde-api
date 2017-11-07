@@ -16,6 +16,7 @@ endif
 LIBRARIES = \
     thumbnails \
     themes \
+    theme_thumb\
     dxinput \
     drandr \
     soundutils \
@@ -36,15 +37,22 @@ BINARIES =  \
     gtk-thumbnailer \
     sound-theme-player \
     deepin-shutdown-sound \
+    image-blur \
     image-blur-helper
 
-all: build
+all: build-binary build-dev ts-to-policy
 
 prepare:
 	@if [ ! -d ${GOBUILD_DIR}/src/${GOPKG_PREFIX} ]; then \
 		mkdir -p ${GOBUILD_DIR}/src/$(dir ${GOPKG_PREFIX}); \
 		ln -sf ../../../.. ${GOBUILD_DIR}/src/${GOPKG_PREFIX}; \
 	fi
+	
+ts:
+	deepin-policy-ts-convert policy2ts misc/polkit-action/com.deepin.api.locale-helper.policy.in misc/ts/com.deepin.api.locale-helper.policy
+
+ts-to-policy:
+	deepin-policy-ts-convert ts2policy misc/polkit-action/com.deepin.api.locale-helper.policy.in misc/ts/com.deepin.api.locale-helper.policy misc/polkit-action/com.deepin.api.locale-helper.policy
 
 out/bin/%:
 	env GOPATH="${CURDIR}/${GOBUILD_DIR}:${GOPATH}" ${GOBUILD} -o $@  ${GOPKG_PREFIX}/${@F}
@@ -56,9 +64,9 @@ build-dep:
 	go get github.com/BurntSushi/xgbutil
 	go get gopkg.in/check.v1
 
-build: prepare $(addprefix out/bin/, ${BINARIES})
+build-binary: prepare $(addprefix out/bin/, ${BINARIES})
 
-install-binary: build
+install-binary: 
 	mkdir -pv ${DESTDIR}${PREFIX}${libdir}/deepin-api
 	cp out/bin/* ${DESTDIR}${PREFIX}${libdir}/deepin-api/
 
@@ -72,7 +80,7 @@ install-binary: build
 	cp -v misc/system-services/*.service ${DESTDIR}${PREFIX}/share/dbus-1/system-services/
 
 	mkdir -pv ${DESTDIR}${PREFIX}/share/polkit-1/actions
-	cp misc/polkit-action/* ${DESTDIR}${PREFIX}/share/polkit-1/actions/
+	cp misc/polkit-action/*.policy ${DESTDIR}${PREFIX}/share/polkit-1/actions/
 
 	#mkdir -pv ${DESTDIR}${PREFIX}/share
 	#cp -R misc/dde-api ${DESTDIR}${PREFIX}/share
@@ -92,7 +100,7 @@ install/lib/%:
 	mkdir -pv ${DESTDIR}${GOSITE_DIR}/src/${GOPKG_PREFIX}
 	cp -R ${CURDIR}/${GOBUILD_DIR}/src/${GOPKG_PREFIX}/${@F} ${DESTDIR}${GOSITE_DIR}/src/${GOPKG_PREFIX}
 
-install-dev: build-dev ${addprefix install/lib/, ${LIBRARIES}}
+install-dev: ${addprefix install/lib/, ${LIBRARIES}}
 
 install: install-binary install-dev
 
