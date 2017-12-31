@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+## [3.1.19] - 2017-12-15
+*   add lib `language_support`
+
+## [3.1.18] - 2017-12-13
+*   doc: update links in README
+*   fix a typo
+*   rename mousearea to x-event-monitor
+*   soundutils: use sound_effect lib
+
 ## [3.1.17] - 2017-11-6
 *   theme_thumb: fix some cursor theme thumbnails generate failed 
 

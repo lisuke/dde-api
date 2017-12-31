@@ -9,7 +9,7 @@ SYSTEMD_SERVICE_DIR = ${SYSTEMD_LIB_DIR}/systemd/system/
 ifndef USE_GCCGO
     GOBUILD = go build
 else
-    LDFLAGS = $(shell pkg-config --libs gio-2.0 gtk+-3.0 gdk-pixbuf-xlib-2.0 x11 xi xfixes xcursor libcanberra cairo-ft poppler-glib librsvg-2.0)
+    LDFLAGS = $(shell pkg-config --libs gio-2.0 gtk+-3.0 gdk-pixbuf-xlib-2.0 x11 xi xfixes xcursor libcanberra cairo-ft poppler-glib librsvg-2.0 alsa libpulse-simple)
     GOBUILD = go build -compiler gccgo -gccgoflags "${LDFLAGS}"
 endif
 
@@ -23,6 +23,7 @@ LIBRARIES = \
     lang_info \
     i18n_dependent \
     session \
+    language_support \
     powersupply
 
 BINARIES =  \
@@ -30,7 +31,6 @@ BINARIES =  \
     graphic \
     locale-helper \
     lunar-calendar \
-    mousearea \
     thumbnailer \
     hans2pinyin \
     cursor-helper \
@@ -47,7 +47,7 @@ prepare:
 		mkdir -p ${GOBUILD_DIR}/src/$(dir ${GOPKG_PREFIX}); \
 		ln -sf ../../../.. ${GOBUILD_DIR}/src/${GOPKG_PREFIX}; \
 	fi
-	
+
 ts:
 	deepin-policy-ts-convert policy2ts misc/polkit-action/com.deepin.api.locale-helper.policy.in misc/ts/com.deepin.api.locale-helper.policy
 
@@ -66,7 +66,7 @@ build-dep:
 
 build-binary: prepare $(addprefix out/bin/, ${BINARIES})
 
-install-binary: 
+install-binary:
 	mkdir -pv ${DESTDIR}${PREFIX}${libdir}/deepin-api
 	cp out/bin/* ${DESTDIR}${PREFIX}${libdir}/deepin-api/
 
@@ -82,8 +82,8 @@ install-binary:
 	mkdir -pv ${DESTDIR}${PREFIX}/share/polkit-1/actions
 	cp misc/polkit-action/*.policy ${DESTDIR}${PREFIX}/share/polkit-1/actions/
 
-	#mkdir -pv ${DESTDIR}${PREFIX}/share
-	#cp -R misc/dde-api ${DESTDIR}${PREFIX}/share
+	mkdir -pv ${DESTDIR}${PREFIX}/share/dde-api
+	cp -R misc/data ${DESTDIR}${PREFIX}/share/dde-api
 
 	mkdir -pv ${DESTDIR}${SYSTEMD_SERVICE_DIR}
 	cp -R misc/systemd/system/*.service ${DESTDIR}${SYSTEMD_SERVICE_DIR}
@@ -91,10 +91,8 @@ install-binary:
 	mkdir -pv ${DESTDIR}${PREFIX}/share/icons/hicolor
 	cp -R misc/icons/* ${DESTDIR}${PREFIX}/share/icons/hicolor
 
-build/lib/%:
-	env GOPATH="${CURDIR}/${GOBUILD_DIR}:${GOPATH}" ${GOBUILD} ${GOPKG_PREFIX}/${@F}
-
-build-dev: prepare $(addprefix build/lib/, ${LIBRARIES})
+build-dev: prepare
+	env GOPATH="${GOPATH}:${CURDIR}/${GOBUILD_DIR}" ${GOBUILD} $(addprefix ${GOPKG_PREFIX}/, ${LIBRARIES})
 
 install/lib/%:
 	mkdir -pv ${DESTDIR}${GOSITE_DIR}/src/${GOPKG_PREFIX}
